@@ -1,129 +1,194 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-  <title>👤 Mi cuenta</title>
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi Cuenta - Comunidad Pollito 🐥</title>
+  <style>
+    :root {
+      --bg-main: #36393f;
+      --bg-card: #2f3136;
+      --bg-dark: #202225;
+      --text-main: #dcddde;
+      --text-muted: #72767d;
+      --accent: #5865f2;
+      --white: #ffffff;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .profile-card {
+      background-color: var(--bg-card);
+      width: 100%;
+      max-width: 450px;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+    }
+
+    /* Banner superior estilo Discord */
+    .banner {
+      height: 100px;
+      background-color: var(--accent);
+    }
+
+    .profile-content {
+      padding: 16px;
+      position: relative;
+    }
+
+    .avatar-wrapper {
+      position: absolute;
+      top: -45px;
+      left: 16px;
+      background: var(--bg-card);
+      padding: 6px;
+      border-radius: 50%;
+    }
+
+    .user-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background-color: var(--bg-dark);
+      display: block;
+      object-fit: cover;
+    }
+
+    .info-box {
+      background-color: var(--bg-dark);
+      border-radius: 8px;
+      margin-top: 50px;
+      padding: 16px;
+    }
+
+    .info-item {
+      margin-bottom: 15px;
+    }
+
+    .info-item label {
+      display: block;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-size: 12px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+
+    .info-item span {
+      font-size: 16px;
+      color: var(--white);
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    button {
+      flex: 1;
+      border: none;
+      padding: 10px;
+      border-radius: 3px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .btn-back { background: #4f545c; color: white; }
+    .btn-back:hover { background: #686d73; }
+    
+    .btn-edit { background: var(--accent); color: white; }
+    .btn-edit:hover { background: #4752c4; }
+
+    #loading { text-align: center; padding: 20px; }
+  </style>
 </head>
+<body>
 
-<body style="font-family: Arial; padding: 20px;">
+<div class="profile-card" id="card" style="display:none;">
+  <div class="banner"></div>
+  <div class="profile-content">
+    <div class="avatar-wrapper">
+      <img id="u-foto" class="user-avatar" src="" alt="avatar">
+    </div>
 
-<h1>👤 Mi cuenta</h1>
+    <div class="info-box">
+      <div class="info-item">
+        <label>Nombre de usuario</label>
+        <span id="u-nombre">Cargando...</span>
+      </div>
+      <div class="info-item">
+        <label>Correo electrónico</label>
+        <span id="u-email">Cargando...</span>
+      </div>
+      <div class="info-item">
+        <label>Rol en el servidor</label>
+        <span id="u-rol" style="color: #00aff4;">Usuario</span>
+      </div>
+    </div>
 
-<button onclick="window.location='app.html'">← Volver</button>
+    <div class="actions">
+      <button class="btn-back" onclick="window.location='app.html'">Volver al chat</button>
+      <button class="btn-edit" onclick="alert('Próximamente: Editar perfil 🐥')">Editar Perfil</button>
+    </div>
+  </div>
+</div>
 
-<hr>
+<div id="loading">Cargando perfil...</div>
 
-<div id="errorBox" style="
-  display:none;
-  background:red;
-  color:white;
-  padding:10px;
-  text-align:center;
-"></div>
-
-<p id="correo"></p>
-
-<h3>✏️ Cambiar nombre</h3>
-<input id="nombreNuevo" placeholder="Nuevo nombre" style="width:100%; padding:10px;">
-<br><br>
-<button onclick="cambiarNombre()" style="width:100%; padding:10px;">Guardar nombre</button>
-
-<hr>
-
-<h3>🔑 Cambiar contraseña</h3>
-<input id="nuevaPass" type="password" placeholder="Nueva contraseña" style="width:100%; padding:10px;">
-<br><br>
-<button onclick="cambiarPass()" style="width:100%; padding:10px;">Cambiar contraseña</button>
-
-<hr>
-
-<button onclick="logout()" style="width:100%; padding:10px; background:black; color:white;">
-🚪 Cerrar sesión
-</button>
-
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
 <script>
 const firebaseConfig = {
-  apiKey: "TU_API_KEY",
-  authDomain: "TU_DOMINIO",
-  projectId: "TU_ID"
+  apiKey: "AIzaSyCVQyiAqSFu00dxVxBv3UVv6qbPx_pPlC4",
+  authDomain: "serviciosdelpollito-d7c13.firebaseapp.com",
+  projectId: "serviciosdelpollito-d7c13"
 };
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// 🔐 mantener sesión
-firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-
-// 👤 verificar usuario
+// 🛡️ VERIFICACIÓN DE SEGURIDAD
 auth.onAuthStateChanged(user => {
   if (!user) {
+    // Si no hay usuario, mandamos al login para que no espíe
     window.location = "index.html";
   } else {
-    correo.innerText = "📧 " + user.email;
+    obtenerDatos(user);
   }
 });
 
-// ❌ mostrar errores en pantalla
-function mostrarError(msg) {
-  errorBox.style.display = "block";
-  errorBox.innerText = "❌ " + msg;
-
-  setTimeout(() => {
-    errorBox.style.display = "none";
-  }, 4000);
-}
-
-// ✏️ cambiar nombre
-function cambiarNombre() {
-  const user = auth.currentUser;
-
-  if (!nombreNuevo.value) {
-    mostrarError("Escribe un nombre");
-    return;
-  }
-
-  db.collection("users").doc(user.uid).update({
-    nombre: nombreNuevo.value
-  })
-  .then(() => {
-    alert("✅ Nombre actualizado");
-  })
-  .catch(error => {
-    mostrarError(error.message);
-  });
-}
-
-// 🔑 cambiar contraseña
-function cambiarPass() {
-  const user = auth.currentUser;
-
-  if (nuevaPass.value.length < 6) {
-    mostrarError("Mínimo 6 caracteres");
-    return;
-  }
-
-  user.updatePassword(nuevaPass.value)
-    .then(() => {
-      alert("✅ Contraseña cambiada");
-    })
-    .catch(error => {
-      mostrarError(error.message);
-    });
-}
-
-// 🚪 cerrar sesión
-function logout() {
-  auth.signOut().then(() => {
-    window.location = "index.html";
+function obtenerDatos(user) {
+  db.collection("users").doc(user.uid).get().then(doc => {
+    if (doc.exists) {
+      const data = doc.data();
+      document.getElementById("u-nombre").innerText = data.nombre;
+      document.getElementById("u-foto").src = data.foto;
+      document.getElementById("u-rol").innerText = data.rol;
+      document.getElementById("u-email").innerText = user.email;
+      
+      // Mostrar la tarjeta y quitar el cargando
+      document.getElementById("loading").style.display = "none";
+      document.getElementById("card").style.display = "block";
+    } else {
+      console.log("No se encontró el documento del usuario");
+    }
   });
 }
 </script>
-
 </body>
 </html>
