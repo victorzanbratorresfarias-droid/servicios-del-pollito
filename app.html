@@ -16,6 +16,19 @@
 <hr>
 
 <div id="foro"></div>
+  function crearPost() {
+  const user = auth.currentUser;
+
+  db.collection("posts").add({
+    titulo: titulo.value,
+    contenido: contenido.value,
+    autor: user.email,
+    fecha: Date.now()
+  });
+
+  titulo.value = "";
+  contenido.value = "";
+}
 <button onclick="logout()">Cerrar sesión</button>
 
 <hr>
