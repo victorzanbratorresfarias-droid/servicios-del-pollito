@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>👤 Mi cuenta</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body style="font-family: Arial; padding: 20px;">
+
+<h1>👤 Mi cuenta</h1>
+
+<button onclick="window.location='app.html'">← Volver</button>
+
+<hr>
+
+<div id="errorBox" style="
+  display:none;
+  background:red;
+  color:white;
+  padding:10px;
+  text-align:center;
+"></div>
+
+<p id="correo"></p>
+
+<h3>✏️ Cambiar nombre</h3>
+<input id="nombreNuevo" placeholder="Nuevo nombre" style="width:100%; padding:10px;">
+<br><br>
+<button onclick="cambiarNombre()" style="width:100%; padding:10px;">Guardar nombre</button>
+
+<hr>
+
+<h3>🔑 Cambiar contraseña</h3>
+<input id="nuevaPass" type="password" placeholder="Nueva contraseña" style="width:100%; padding:10px;">
+<br><br>
+<button onclick="cambiarPass()" style="width:100%; padding:10px;">Cambiar contraseña</button>
+
+<hr>
+
+<button onclick="logout()" style="width:100%; padding:10px; background:black; color:white;">
+🚪 Cerrar sesión
+</button>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "TU_API_KEY",
+  authDomain: "TU_DOMINIO",
+  projectId: "TU_ID"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// 🔐 mantener sesión
+firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+
+// 👤 verificar usuario
+auth.onAuthStateChanged(user => {
+  if (!user) {
+    window.location = "index.html";
+  } else {
+    correo.innerText = "📧 " + user.email;
+  }
+});
+
+// ❌ mostrar errores en pantalla
+function mostrarError(msg) {
+  errorBox.style.display = "block";
+  errorBox.innerText = "❌ " + msg;
+
+  setTimeout(() => {
+    errorBox.style.display = "none";
+  }, 4000);
+}
+
+// ✏️ cambiar nombre
+function cambiarNombre() {
+  const user = auth.currentUser;
+
+  if (!nombreNuevo.value) {
+    mostrarError("Escribe un nombre");
+    return;
+  }
+
+  db.collection("users").doc(user.uid).update({
+    nombre: nombreNuevo.value
+  })
+  .then(() => {
+    alert("✅ Nombre actualizado");
+  })
+  .catch(error => {
+    mostrarError(error.message);
+  });
+}
+
+// 🔑 cambiar contraseña
+function cambiarPass() {
+  const user = auth.currentUser;
+
+  if (nuevaPass.value.length < 6) {
+    mostrarError("Mínimo 6 caracteres");
+    return;
+  }
+
+  user.updatePassword(nuevaPass.value)
+    .then(() => {
+      alert("✅ Contraseña cambiada");
+    })
+    .catch(error => {
+      mostrarError(error.message);
+    });
+}
+
+// 🚪 cerrar sesión
+function logout() {
+  auth.signOut().then(() => {
+    window.location = "index.html";
+  });
+}
+</script>
+
+</body>
+</html>
