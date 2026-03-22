@@ -18,7 +18,7 @@
     body {
       margin: 0;
       padding: 0;
-      font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background-color: var(--bg-discord);
       display: flex;
       justify-content: center;
@@ -31,37 +31,33 @@
       background-color: var(--card-discord);
       padding: 32px;
       border-radius: 8px;
-      box-shadow: 0 2px 10px 0 rgba(0,0,0,0.2);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
       width: 100%;
       max-width: 400px;
       text-align: center;
     }
 
-    h1 {
-      font-size: 24px;
-      margin-bottom: 8px;
-      color: var(--white);
+    /* SPINNER ANIMATION */
+    .loader {
+      display: none; /* Oculto por defecto */
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+      margin: 0 auto 15px auto;
     }
 
-    p {
-      color: var(--text-gray);
-      margin-bottom: 20px;
-      font-size: 16px;
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
 
-    .form-group {
-      text-align: left;
-      margin-bottom: 20px;
-    }
+    h1 { font-size: 24px; margin-bottom: 8px; }
+    p { color: var(--text-gray); margin-bottom: 20px; }
 
-    label {
-      display: block;
-      color: var(--text-gray);
-      text-transform: uppercase;
-      font-size: 12px;
-      font-weight: bold;
-      margin-bottom: 8px;
-    }
+    .form-group { text-align: left; margin-bottom: 20px; }
+    label { display: block; color: var(--text-gray); text-transform: uppercase; font-size: 12px; font-weight: bold; margin-bottom: 8px; }
 
     input {
       width: 100%;
@@ -70,15 +66,11 @@
       border: 1px solid rgba(0,0,0,0.3);
       border-radius: 3px;
       color: var(--white);
-      font-size: 16px;
       box-sizing: border-box;
       outline: none;
-      transition: border-color 0.2s;
     }
 
-    input:focus {
-      border-color: var(--accent);
-    }
+    input:focus { border-color: var(--accent); }
 
     .btn-main {
       width: 100%;
@@ -87,16 +79,12 @@
       color: white;
       border: none;
       border-radius: 3px;
-      font-size: 16px;
       font-weight: 500;
       cursor: pointer;
       margin-bottom: 12px;
-      transition: background-color 0.2s;
     }
 
-    .btn-main:hover {
-      background-color: var(--accent-hover);
-    }
+    .btn-main:disabled { background-color: var(--accent-hover); opacity: 0.6; cursor: not-allowed; }
 
     .btn-google {
       width: 100%;
@@ -110,32 +98,16 @@
       align-items: center;
       justify-content: center;
       gap: 10px;
-      transition: background-color 0.2s;
     }
 
-    .btn-google:hover {
-      background-color: rgba(255,255,255,0.05);
-    }
-
-    .footer-links {
-      margin-top: 15px;
-      font-size: 14px;
-      color: var(--text-gray);
-    }
-
-    .footer-links span {
-      color: var(--accent);
-      cursor: pointer;
-    }
-
-    .footer-links span:hover {
-      text-decoration: underline;
-    }
+    .footer-links { margin-top: 15px; font-size: 14px; color: var(--text-gray); }
+    .footer-links span { color: var(--accent); cursor: pointer; }
   </style>
 </head>
 <body>
 
 <div class="login-card">
+  <div id="loadingSpinner" class="loader"></div>
   <h1>¡Hola de nuevo! 🐥</h1>
   <p>Servicios del Pollito te espera.</p>
 
@@ -149,8 +121,8 @@
     <input id="password" type="password">
   </div>
 
-  <button class="btn-main" onclick="login()">Iniciar sesión</button>
-  <button class="btn-google" onclick="loginGoogle()">
+  <button id="loginBtn" class="btn-main" onclick="login()">Iniciar sesión</button>
+  <button id="googleBtn" class="btn-google" onclick="loginGoogle()">
     <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18">
     Entrar con Google
   </button>
@@ -165,7 +137,7 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
 <script>
-// --- TU CONFIGURACIÓN DE FIREBASE (Intacta) ---
+// --- TU CONFIGURACIÓN ---
 const firebaseConfig = {
   apiKey: "AIzaSyCVQyiAqSFu00dxVxBv3UVv6qbPx_pPlC4",
   authDomain: "serviciosdelpollito-d7c13.firebaseapp.com",
@@ -176,39 +148,54 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-console.log("SCRIPT FUNCIONANDO 🐥");
+function toggleLoading(isLoading) {
+  const spinner = document.getElementById("loadingSpinner");
+  const loginBtn = document.getElementById("loginBtn");
+  const googleBtn = document.getElementById("googleBtn");
+  
+  spinner.style.display = isLoading ? "block" : "none";
+  loginBtn.disabled = isLoading;
+  googleBtn.disabled = isLoading;
+  loginBtn.innerText = isLoading ? "Cargando..." : "Iniciar sesión";
+}
 
 function register() {
   const e = document.getElementById("email").value;
   const p = document.getElementById("password").value;
-  
   if(!e || !p) return alert("Completa los campos");
 
+  toggleLoading(true);
   auth.createUserWithEmailAndPassword(e, p)
   .then(user => {
     db.collection("users").doc(user.user.uid).set({
       nombre: "Pollito",
       foto: "https://i.imgur.com/4ZQZ4ZQ.png",
       rol: "usuario"
-    });
-    window.location = "app.html";
+    }).then(() => window.location = "app.html");
   })
-  .catch(err => alert(err.message));
+  .catch(err => {
+    toggleLoading(false);
+    alert(err.message);
+  });
 }
 
 function login() {
   const e = document.getElementById("email").value;
   const p = document.getElementById("password").value;
+  if(!e || !p) return alert("Escribe tus datos");
 
+  toggleLoading(true);
   auth.signInWithEmailAndPassword(e, p)
-  .then(() => {
-    window.location = "app.html";
-  })
-  .catch(err => alert("Error al entrar: " + err.message));
+  .then(() => window.location = "app.html")
+  .catch(err => {
+    toggleLoading(false);
+    alert("Error: " + err.message);
+  });
 }
 
 function loginGoogle() {
   const provider = new firebase.auth.GoogleAuthProvider();
+  toggleLoading(true);
   auth.signInWithPopup(provider)
   .then(result => {
     const user = result.user;
@@ -216,12 +203,13 @@ function loginGoogle() {
       nombre: user.displayName,
       foto: user.photoURL,
       rol: "usuario"
-    });
-    window.location = "app.html";
+    }).then(() => window.location = "app.html");
   })
-  .catch(err => console.log(err));
+  .catch(err => {
+    toggleLoading(false);
+    console.log(err);
+  });
 }
 </script>
-
 </body>
 </html>
