@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>📌 Foro</title>
+</head>
+<body>
+
+<h1>📌 Foro</h1>
+
+<button onclick="window.location='app.html'">← Volver al chat</button>
+
+<hr>
+
+<input id="titulo" placeholder="Título">
+<input id="contenido" placeholder="Contenido">
+
+<button onclick="crearPost()">Publicar</button>
+
+<hr>
+
+<div id="foro"></div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "TU_API_KEY",
+  authDomain: "TU_DOMINIO",
+  projectId: "TU_ID"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// verificar login
+auth.onAuthStateChanged(user => {
+  if (!user) {
+    window.location = "index.html";
+  } else {
+    cargarPosts();
+  }
+});
+
+// crear post
+function crearPost() {
+  const user = auth.currentUser;
+
+  db.collection("posts").add({
+    titulo: titulo.value,
+    contenido: contenido.value,
+    autor: user.email,
+    fecha: Date.now()
+  });
+
+  titulo.value = "";
+  contenido.value = "";
+}
+
+// cargar posts
+function cargarPosts() {
+  db.collection("posts")
+    .orderBy("fecha", "desc")
+    .onSnapshot(snapshot => {
+      foro.innerHTML = "";
+
+      snapshot.forEach(doc => {
+        const p = doc.data();
+
+        foro.innerHTML += `
+          <div style="border:1px solid gray; padding:10px; margin:10px;">
+            <h3>${p.titulo}</h3>
+            <p>${p.contenido}</p>
+            <small>👤 ${p.autor}</small>
+          </div>
+        `;
+      });
+    });
+}
+</script>
+
+</body>
+</html>
