@@ -6,17 +6,7 @@
 <body>
 
 <h1>💬 Comunidad</h1>
-<h2>📌 Foro</h2>
 
-<input id="titulo" placeholder="Título del post">
-<input id="contenido" placeholder="Contenido">
-
-<button onclick="crearPost()">Publicar</button>
-
-<hr>
-
-<div id="foro"></div>
-  
 <button onclick="logout()">Cerrar sesión</button>
 
 <hr>
@@ -96,36 +86,6 @@ function logout() {
   });
 }
 </script>
-function crearPost() {
-  const user = auth.currentUser;
 
-  db.collection("posts").add({
-    titulo: titulo.value,
-    contenido: contenido.value,
-    autor: user.email,
-    fecha: Date.now()
-  });
-
-  titulo.value = "";
-  contenido.value = "";
-function cargarPosts() {
-  db.collection("posts")
-    .orderBy("fecha", "desc")
-    .onSnapshot(snapshot => {
-      foro.innerHTML = "";
-
-      snapshot.forEach(doc => {
-        const p = doc.data();
-
-        foro.innerHTML += `
-          <div style="border:1px solid gray; padding:10px; margin:10px;">
-            <h3>${p.titulo}</h3>
-            <p>${p.contenido}</p>
-            <small>👤 ${p.autor}</small>
-          </div>
-        `;
-      });
-    });
-}
 </body>
 </html>
