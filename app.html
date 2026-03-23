@@ -159,7 +159,7 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 // --- SISTEMA DE CENSURA ---
-const prohibidas = ["tonto", "feo", "malo" "mierda, "puta", "pene";"kgada", "verga", "porno"] // Añade las que quieras
+const prohibidas = ["tonto", "feo", "malo" "mierda", "puta", "pene"; "kgada", "verga", "porno"] // Añade las que quieras
 function censurar(t) {
   let limpio = t;
   prohibidas.forEach(p => {
