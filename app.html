@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🐥 Comunidad Pollito</title>
+  <title>🐥 Comunidad Pollito - Chat</title>
   <style>
     :root {
       --bg-main: #36393f;
@@ -15,13 +15,12 @@
       --accent-hover: #4752c4;
       --danger: #ed4245;
       --border: #202225;
-      --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
     body {
       background-color: var(--bg-main);
       color: var(--text-main);
-      font-family: var(--font-family);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
       display: flex;
       flex-direction: column;
@@ -36,13 +35,13 @@
       justify-content: space-between;
       align-items: center;
       border-bottom: 1px solid var(--border);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.2);
     }
 
     header h1 { margin: 0; font-size: 1.1rem; color: white; }
 
     .nav-buttons { display: flex; gap: 8px; }
 
-    /* BOTONES ESTILIZADOS */
     button {
       border: none;
       border-radius: 4px;
@@ -56,27 +55,27 @@
     .btn-primary { background: var(--accent); color: white; }
     .btn-primary:hover { background: var(--accent-hover); }
 
-    .btn-danger { background: transparent; color: var(--text-muted); }
-    .btn-danger:hover { background: var(--danger); color: white; }
-
     .btn-user { background: #4f545c; color: white; }
     .btn-user:hover { background: #686d73; }
 
-    /* CHAT CORREGIDO */
+    .btn-danger { background: transparent; color: var(--text-muted); }
+    .btn-danger:hover { background: var(--danger); color: white; }
+
     #chat-wrapper {
       flex: 1;
       overflow-y: auto;
       padding: 20px 0;
       display: flex;
-      flex-direction: column; /* Cambiado de column-reverse para evitar bugs de orden */
+      flex-direction: column;
     }
 
     .mensaje-container {
       display: flex;
       padding: 4px 20px;
+      transition: background 0.1s;
     }
 
-    .mensaje-container:hover { background-color: rgba(0,0,0,0.1); }
+    .mensaje-container:hover { background-color: rgba(0,0,0,0.05); }
 
     .user-avatar {
       width: 40px;
@@ -84,13 +83,13 @@
       border-radius: 50%;
       margin-right: 15px;
       flex-shrink: 0;
+      background: #202225;
     }
 
     .user-name { font-weight: 600; color: white; margin-right: 8px; }
     .rol-tag { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: bold; }
-    .message-text { font-size: 0.95rem; white-space: pre-wrap; word-break: break-word; }
+    .message-text { font-size: 0.95rem; line-height: 1.4; white-space: pre-wrap; word-break: break-word; }
 
-    /* ÁREA DE INPUT */
     #input-wrapper { padding: 0 20px 24px; }
     #input-area {
       background: var(--bg-input);
@@ -106,6 +105,7 @@
       color: white;
       padding: 12px 0;
       outline: none;
+      font-size: 0.95rem;
     }
 
     #errorBox {
@@ -124,11 +124,11 @@
 <div id="errorBox"></div>
 
 <header>
-  <h1>Comunidad Pollito</h1>
+  <h1># comunidad</h1>
   <div class="nav-buttons">
     <button class="btn-primary" onclick="window.location='foro.html'">📌 Foro</button>
     <button class="btn-user" onclick="window.location='cuenta.html'">👤 Mi cuenta</button>
-    <button class="btn-danger" onclick="logout()">Salir</button>
+    <button class="btn-danger" onclick="logout()">Cerrar Sesión</button>
   </div>
 </header>
 
@@ -139,7 +139,7 @@
 <div id="input-wrapper">
   <div id="input-area">
     <input id="msg" placeholder="Enviar mensaje a #comunidad" onkeypress="handleEnter(event)">
-    <button class="btn-primary" style="background:transparent; color:var(--accent)" onclick="send()">ENVIAR</button>
+    <button class="btn-primary" style="background:transparent; color:var(--accent); font-weight:bold;" onclick="send()">ENVIAR</button>
   </div>
 </div>
 
@@ -148,84 +148,113 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyCVQyiAqSFu00dxVxBv3UVv6qbPx_pPlC4",
-  authDomain: "serviciosdelpollito-d7c13.firebaseapp.com",
-  projectId: "serviciosdelpollito-d7c13"
-};
+  // CONFIGURACIÓN DE FIREBASE
+  const firebaseConfig = {
+    apiKey: "AIzaSyCVQyiAqSFu00dxVxBv3UVv6qbPx_pPlC4",
+    authDomain: "serviciosdelpollito-d7c13.firebaseapp.com",
+    projectId: "serviciosdelpollito-d7c13"
+  };
 
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
+  if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+  }
+  const auth = firebase.auth();
+  const db = firebase.firestore();
 
+  // SISTEMA DE CENSURA
+  const prohibidas = ["tonto", "feo", "malo", "basura", "estupido"]; 
+  
+  function censurar(texto) {
+    if (!texto) return "";
+    let resultado = texto;
+    prohibidas.forEach(p => {
+      const regex = new RegExp(p, "gi");
+      resultado = resultado.replace(regex, "****");
+    });
+    return resultado;
+  }
 
-}
+  // CARGAR MENSAJES
+  function cargarMensajes() {
+    const chatDiv = document.getElementById("chat");
+    const wrapper = document.getElementById("chat-wrapper");
 
-// LOGIN CHECK
-auth.onAuthStateChanged(user => {
-  if (!user) window.location = "index.html";
-  else cargarMensajes();
-});
-
-function cargarMensajes() {
-  const chatDiv = document.getElementById("chat");
-  const wrapper = document.getElementById("chat-wrapper");
-
-  db.collection("messages").orderBy("fecha").onSnapshot(snapshot => {
-    chatDiv.innerHTML = "";
-    snapshot.forEach(doc => {
-      const m = doc.data();
-      chatDiv.innerHTML += `
-        <div class="mensaje-container">
-          <img src="${m.foto}" class="user-avatar">
-          <div>
-            <div style="margin-bottom:2px">
-              <span class="user-name">${m.nombre}</span>
-              <span class="rol-tag">${m.rol}</span>
+    db.collection("messages").orderBy("fecha", "asc").onSnapshot(snapshot => {
+      chatDiv.innerHTML = "";
+      snapshot.forEach(doc => {
+        const m = doc.data();
+        chatDiv.innerHTML += `
+          <div class="mensaje-container">
+            <img src="${m.foto || 'https://via.placeholder.com/40'}" class="user-avatar" alt="av">
+            <div>
+              <div style="margin-bottom:2px">
+                <span class="user-name">${m.nombre}</span>
+                <span class="rol-tag">${m.rol || 'USUARIO'}</span>
+              </div>
+              <div class="message-text">${m.texto}</div>
             </div>
-            <div class="message-text">${m.texto}</div>
           </div>
-        </div>
-      `;
+        `;
+      });
+      wrapper.scrollTop = wrapper.scrollHeight;
+    }, error => {
+      if (error.code === "permission-denied") {
+        mostrarError("Error 403: Revisa las Reglas en la Consola de Firebase.");
+      }
     });
-    wrapper.scrollTop = wrapper.scrollHeight;
+  }
+
+  // ENVIAR MENSAJE
+  function send() {
+    const input = document.getElementById("msg");
+    const valor = input.value.trim();
+    if (!valor) return;
+
+    const textoFinal = censurar(valor);
+    const user = auth.currentUser;
+
+    if (user) {
+      db.collection("users").doc(user.uid).get().then(doc => {
+        if (doc.exists) {
+          const u = doc.data();
+          db.collection("messages").add({
+            texto: textoFinal,
+            nombre: u.nombre,
+            foto: u.foto,
+            rol: u.rol,
+            fecha: Date.now()
+          });
+        }
+      }).catch(err => mostrarError("Error al obtener perfil: " + err.message));
+      input.value = "";
+    }
+  }
+
+  // TECLA ENTER
+  function handleEnter(e) {
+    if (e.key === 'Enter') send();
+  }
+
+  // CONTROL DE SESIÓN
+  auth.onAuthStateChanged(user => {
+    if (!user) {
+      window.location = "index.html";
+    } else {
+      cargarMensajes();
+    }
   });
-}
 
-function send() {
-  const input = document.getElementById("msg");
-  const valor = input.value.trim();
-  if(!valor) return;
+  function logout() {
+    auth.signOut().then(() => { window.location = "index.html"; });
+  }
 
-  const textoFinal = censurar(valor);
-  const user = auth.currentUser;
-
-  db.collection("users").doc(user.uid).get().then(doc => {
-    const u = doc.data();
-    db.collection("messages").add({
-      texto: textoFinal,
-      nombre: u.nombre,
-      foto: u.foto,
-      rol: u.rol,
-      fecha: Date.now()
-    });
-  });
-  input.value = "";
-}
-
-// ARREGLO DE TECLA ENTER
-function handleEnter(e) {
-  if (e.key === 'Enter') send();
-}
-
-function logout() { auth.signOut().then(() => window.location = "index.html"); }
-
-function mostrarError(msg) {
-  const eb = document.getElementById("errorBox");
-  eb.innerText = "⚠️ " + msg;
-  eb.style.display = "block";
-  setTimeout(() => eb.style.display = "none", 5000);
-}
+  function mostrarError(msg) {
+    const eb = document.getElementById("errorBox");
+    eb.innerText = "⚠️ " + msg;
+    eb.style.display = "block";
+    setTimeout(() => eb.style.display = "none", 6000);
+  }
 </script>
+
 </body>
 </html>
