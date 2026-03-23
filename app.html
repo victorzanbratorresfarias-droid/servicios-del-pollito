@@ -158,15 +158,7 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// --- SISTEMA DE CENSURA ---
-const prohibidas = ["tonto", "feo", "malo" "mierda" "puta" "pene" "kgada" "verga" "porno"];// Añade las que quieras
-function censurar(t) {
-  let limpio = t;
-  prohibidas.forEach(p => {
-    const reg = new RegExp(p, "gi");
-    limpio = limpio.replace(reg, "XXXXXXXXXXXXXXXX");
-  });
-  return limpio;
+
 }
 
 // LOGIN CHECK
