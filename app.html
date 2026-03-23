@@ -1,146 +1,44 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>polli chat🐥</title>
-  <style>
-    :root {
-      --bg-main: #36393f;
-      --bg-side: #2f3136;
-      --bg-input: #40444b;
-      --text-main: #dcddde;
-      --text-muted: #72767d;
-      --accent: #5865f2;
-      --accent-hover: #4752c4;
-      --danger: #ed4245;
-      --border: #202225;
-    }
-
-    body {
-      background-color: var(--bg-main);
-      color: var(--text-main);
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      overflow: hidden;
-    }
-
-    header {
-      background-color: var(--bg-side);
-      padding: 10px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid var(--border);
-      box-shadow: 0 1px 2px rgba(0,0,0,0.2);
-    }
-
-    header h1 { margin: 0; font-size: 1.1rem; color: white; }
-
-    .nav-buttons { display: flex; gap: 8px; }
-
-    button {
-      border: none;
-      border-radius: 4px;
-      padding: 7px 14px;
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-
-    .btn-primary { background: var(--accent); color: white; }
-    .btn-primary:hover { background: var(--accent-hover); }
-
-    .btn-user { background: #4f545c; color: white; }
-    .btn-user:hover { background: #686d73; }
-
-    .btn-danger { background: transparent; color: var(--text-muted); }
-    .btn-danger:hover { background: var(--danger); color: white; }
-
-    #chat-wrapper {
-      flex: 1;
-      overflow-y: auto;
-      padding: 20px 0;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .mensaje-container {
-      display: flex;
-      padding: 4px 20px;
-      transition: background 0.1s;
-    }
-
-    .mensaje-container:hover { background-color: rgba(0,0,0,0.05); }
-
-    .user-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      margin-right: 15px;
-      flex-shrink: 0;
-      background: #202225;
-    }
-
-    .user-name { font-weight: 600; color: white; margin-right: 8px; }
-    .rol-tag { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: bold; }
-    .message-text { font-size: 0.95rem; line-height: 1.4; white-space: pre-wrap; word-break: break-word; }
-
-    #input-wrapper { padding: 0 20px 24px; }
-    #input-area {
-      background: var(--bg-input);
-      border-radius: 8px;
-      display: flex;
-      padding: 2px 15px;
-    }
-
-    #msg {
-      flex: 1;
-      background: transparent;
-      border: none;
-      color: white;
-      padding: 12px 0;
-      outline: none;
-      font-size: 0.95rem;
-    }
-
-    #errorBox {
-      display: none;
-      background: var(--danger);
-      color: white;
-      padding: 10px;
-      text-align: center;
-      position: fixed;
-      top: 0; width: 100%; z-index: 100;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐥 Polli Chat - Comunidad</title>
+    <style>
+        :root { --bg-main: #36393f; --bg-side: #2f3136; --bg-input: #40444b; --text-main: #dcddde; --accent: #5865f2; --danger: #ed4245; }
+        body { background: var(--bg-main); color: var(--text-main); font-family: sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; }
+        header { background: var(--bg-side); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #202225; }
+        .nav-buttons { display: flex; gap: 10px; }
+        button { border: none; border-radius: 4px; padding: 8px 15px; cursor: pointer; font-weight: bold; color: white; transition: 0.3s; }
+        .btn-blue { background: var(--accent); }
+        .btn-admin { background: var(--danger); display: none; } /* Oculto por defecto */
+        #chat-wrapper { flex: 1; overflow-y: auto; padding: 20px; }
+        .mensaje { margin-bottom: 15px; display: flex; gap: 10px; }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; background: #202225; }
+        .nombre { font-weight: bold; color: white; }
+        .texto { font-size: 0.95rem; margin-top: 2px; }
+        #input-area { padding: 20px; background: var(--bg-side); display: flex; gap: 10px; }
+        input { flex: 1; background: var(--bg-input); border: none; padding: 12px; color: white; border-radius: 5px; outline: none; }
+    </style>
 </head>
 <body>
 
-<div id="errorBox"></div>
-
 <header>
-  <h1># comunidad</h1>
-  <div class="nav-buttons">
-    <button class="btn-primary" onclick="window.location='https://victorzanbratorresfarias-droid.github.io/polli-chat/foro.html'">📌 Foro</button>
-    <button class="btn-user" onclick="window.location=''https://victorzanbratorresfarias-droid.github.io/polli-chat/cuenta.html'">👤 Mi cuenta</button>
-    <button class="btn-danger" onclick="logout()">Cerrar Sesión</button>
-  </div>
+    <h1># polli-chat</h1>
+    <div class="nav-buttons">
+        <button id="admin-link" class="btn-admin" onclick="window.location='admin.html'">👑 PANEL ADMIN</button>
+        <button class="btn-blue" onclick="window.location='foro.html'">📌 Foro</button>
+        <button style="background:#4f545c" onclick="auth.signOut()">Salir</button>
+    </div>
 </header>
 
 <div id="chat-wrapper">
-  <div id="chat"></div>
+    <div id="chat"></div>
 </div>
 
-<div id="input-wrapper">
-  <div id="input-area">
-    <input id="msg" placeholder="Enviar mensaje a #comunidad" onkeypress="handleEnter(event)">
-    <button class="btn-primary" style="background:transparent; color:var(--accent); font-weight:bold;" onclick="send()">ENVIAR</button>
-  </div>
+<div id="input-area">
+    <input id="msg" placeholder="Escribe un mensaje..." onkeypress="if(event.key==='Enter') send()">
+    <button class="btn-blue" onclick="send()">ENVIAR</button>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -148,113 +46,64 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
 <script>
-  // CONFIGURACIÓN DE FIREBASE
-  const firebaseConfig = {
-    apiKey: "AIzaSyCVQyiAqSFu00dxVxBv3UVv6qbPx_pPlC4",
-    authDomain: "serviciosdelpollito-d7c13.firebaseapp.com",
-    projectId: "serviciosdelpollito-d7c13"
-  };
+    const firebaseConfig = {
+        apiKey: "AIzaSyCVQyiAqSFu00dxVxBv3UVv6qbPx_pPlC4",
+        authDomain: "serviciosdelpollito-d7c13.firebaseapp.com",
+        projectId: "serviciosdelpollito-d7c13"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
-  if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
-  }
-  const auth = firebase.auth();
-  const db = firebase.firestore();
+    // 👑 LISTA DE ADMINS (PON TU CORREO AQUÍ)
+    const admins = ["victorzanbratorresfarias@gmail.com"] ["tahielgz17@gmail.com"];
 
-  // SISTEMA DE CENSURA
-  const prohibidas = ["tonto", "feo", "malo", "basura", "estupido"]; 
-  
-  function censurar(texto) {
-    if (!texto) return "";
-    let resultado = texto;
-    prohibidas.forEach(p => {
-      const regex = new RegExp(p, "gi");
-      resultado = resultado.replace(regex, "****");
-    });
-    return resultado;
-  }
-
-  // CARGAR MENSAJES
-  function cargarMensajes() {
-    const chatDiv = document.getElementById("chat");
-    const wrapper = document.getElementById("chat-wrapper");
-
-    db.collection("messages").orderBy("fecha", "asc").onSnapshot(snapshot => {
-      chatDiv.innerHTML = "";
-      snapshot.forEach(doc => {
-        const m = doc.data();
-        chatDiv.innerHTML += `
-          <div class="mensaje-container">
-            <img src="${m.foto || 'https://via.placeholder.com/40'}" class="user-avatar" alt="av">
-            <div>
-              <div style="margin-bottom:2px">
-                <span class="user-name">${m.nombre}</span>
-                <span class="rol-tag">${m.rol || 'USUARIO'}</span>
-              </div>
-              <div class="message-text">${m.texto}</div>
-            </div>
-          </div>
-        `;
-      });
-      wrapper.scrollTop = wrapper.scrollHeight;
-    }, error => {
-      if (error.code === "permission-denied") {
-        mostrarError("Error 403: Revisa las Reglas en la Consola de Firebase.");
-      }
-    });
-  }
-
-  // ENVIAR MENSAJE
-  function send() {
-    const input = document.getElementById("msg");
-    const valor = input.value.trim();
-    if (!valor) return;
-
-    const textoFinal = censurar(valor);
-    const user = auth.currentUser;
-
-    if (user) {
-      db.collection("users").doc(user.uid).get().then(doc => {
-        if (doc.exists) {
-          const u = doc.data();
-          db.collection("messages").add({
-            texto: textoFinal,
-            nombre: u.nombre,
-            foto: u.foto,
-            rol: u.rol,
-            fecha: Date.now()
-          });
+    auth.onAuthStateChanged(user => {
+        if (!user) {
+            window.location = "index.html";
+        } else {
+            // Si el correo está en la lista, mostrar botón admin
+            if (admins.includes(user.email)) {
+                document.getElementById('admin-link').style.display = 'block';
+            }
+            cargarMensajes();
         }
-      }).catch(err => mostrarError("Error al obtener perfil: " + err.message));
-      input.value = "";
+    });
+
+    function cargarMensajes() {
+        const chatDiv = document.getElementById("chat");
+        db.collection("messages").orderBy("fecha", "asc").onSnapshot(snap => {
+            chatDiv.innerHTML = "";
+            snap.forEach(doc => {
+                const m = doc.data();
+                chatDiv.innerHTML += `
+                    <div class="mensaje">
+                        <img src="${m.foto || 'https://via.placeholder.com/40'}" class="avatar">
+                        <div>
+                            <span class="nombre">${m.nombre}</span>
+                            <div class="texto">${m.texto}</div>
+                        </div>
+                    </div>`;
+            });
+            document.getElementById("chat-wrapper").scrollTop = document.getElementById("chat-wrapper").scrollHeight;
+        });
     }
-  }
 
-  // TECLA ENTER
-  function handleEnter(e) {
-    if (e.key === 'Enter') send();
-  }
-
-  // CONTROL DE SESIÓN
-  auth.onAuthStateChanged(user => {
-    if (!user) {
-      window.location = "index.html";
-    } else {
-      cargarMensajes();
+    function send() {
+        const input = document.getElementById("msg");
+        if (!input.value.trim()) return;
+        const user = auth.currentUser;
+        db.collection("users").doc(user.uid).get().then(doc => {
+            const u = doc.data();
+            db.collection("messages").add({
+                texto: input.value,
+                nombre: u.nombre,
+                foto: u.foto,
+                fecha: Date.now()
+            });
+            input.value = "";
+        });
     }
-  });
-
-  function logout() {
-    auth.signOut().then(() => { window.location = "index.html"; });
-  }
-
-  function mostrarError(msg) {
-    const eb = document.getElementById("errorBox");
-    eb.innerText = "⚠️ " + msg;
-    eb.style.display = "block";
-    setTimeout(() => eb.style.display = "none", 6000);
-  }
 </script>
-
 </body>
 </html>
