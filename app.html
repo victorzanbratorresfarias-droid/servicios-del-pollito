@@ -100,63 +100,43 @@
         }
     });
 
-   function cargarMensajes() {
+  function cargarMensajes() {
     const chatDiv = document.getElementById("chat");
-    const wrapper = document.getElementById("chat-wrapper");
+    const wrap = document.getElementById("chat-wrapper");
 
-    // 🕒 1. Ponemos un temporizador de 5 segundos
+    // 🕒 Error amigable si tarda más de 5 segundos
     const timeoutError = setTimeout(() => {
         if (chatDiv.innerHTML === "" || chatDiv.innerHTML.includes("Cargando")) {
-            // Si después de 5 segundos sigue vacío, mostramos el error
             chatDiv.innerHTML = `
-                <div style="text-align:center; padding:50px; color:#72767d;">
-                    <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJueGZ3bmZ3bmZ3bmZ3bmZ3bmZ3bmZ3bmZ3bmZ3bmZ3bmZ3JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCBmYWlsJnB0PW0mcz0w/h4OGa0npayrS2W7RnI/giphy.gif" 
-                         style="width:150px; margin-bottom:20px; border-radius:10px;">
-                    <h2 style="color:white;">¡Ups! Algo ha ocurrido 🐣</h2>
-                    <p>No pudimos cargar los mensajes. Revisa tu conexión o intenta recargar.</p>
-                    <button onclick="location.reload()" style="background:#5865f2; color:white; border:none; padding:10px 20px; border-radius:5px; cursor:pointer; margin-top:10px;">REINTENTAR</button>
-                </div>
-            `;
+                <div style="text-align:center; padding:50px;">
+                    <img src="https://media.giphy.com/media/h4OGa0npayrS2W7RnI/giphy.gif" width="120">
+                    <h3 style="color:white;">¡Algo ha ocurrido! 🐣</h3>
+                    <p style="color:gray;">No pudimos conectar con el nido. Revisa tu internet.</p>
+                </div>`;
         }
-    }, 5000); // 5000 milisegundos = 5 segundos
+    }, 5000);
 
-    // 2. Intentamos cargar desde Firebase
-    db.collection("messages").orderBy("fecha", "asc").onSnapshot(snapshot => {
-        clearTimeout(timeoutError); // ✅ ¡Éxito! Cancelamos el error porque sí cargó
+    db.collection("messages").orderBy("fecha", "asc").onSnapshot(snap => {
+        clearTimeout(timeoutError); // Cancelar error si cargó bien
         chatDiv.innerHTML = "";
         
-        snapshot.forEach(doc => {
+        snap.forEach(doc => {
             const m = doc.data();
+            // 🛡️ Si no tiene foto, usamos una por defecto (un pollito o gris)
+            const fotoPerfil = m.foto ? m.foto : "https://cdn-icons-png.flaticon.com/512/3996/3996996.png";
+            
             chatDiv.innerHTML += `
-                <div class="mensaje-container">
-                    <img src="${m.foto || 'https://via.placeholder.com/40'}" class="user-avatar">
+                <div style="display:flex; gap:12px; margin-bottom:18px; align-items: flex-start;">
+                    <img src="${fotoPerfil}" style="width:45px; height:45px; border-radius:50%; object-fit:cover; border: 2px solid #202225;">
                     <div>
-                        <span class="user-name">${m.nombre}</span>
-                        <div class="message-text">${m.texto}</div>
+                        <span style="color:#5865f2; font-weight:bold; font-size:0.9rem;">${m.nombre}</span>
+                        <div style="color:#dcddde; font-size:1rem; margin-top:2px; line-height:1.4;">${m.texto}</div>
                     </div>
                 </div>`;
         });
-        wrapper.scrollTop = wrapper.scrollHeight;
-    }, error => {
-        // Si Firebase responde con un error de inmediato (como el 403)
-        console.error("Error de Firebase:", error);
+        wrap.scrollTop = wrap.scrollHeight; // Auto-scroll al final
     });
 }
-
-    function send() {
-        const input = document.getElementById("msg");
-        if (!input.value.trim()) return;
-        const user = auth.currentUser;
-        db.collection("users").doc(user.uid).get().then(doc => {
-            const u = doc.data();
-            db.collection("messages").add({
-                texto: input.value,
-                nombre: u.nombre,
-                fecha: Date.now()
-            });
-            input.value = "";
-        });
-    }
 </script>
 </body>
 </html>
