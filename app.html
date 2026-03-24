@@ -55,16 +55,25 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // 👑 LISTA DE ADMINS (PON TU CORREO AQUÍ)
-    const admins = ["tahielgz17@gmail.com"];
+ // 👑 1. LISTA DE ADMINS (Asegúrate de que esté en minúsculas)
+const admins = ["tahielgz17@gmail.com"]; 
 
-    auth.onAuthStateChanged(user => {
-        if (!user) {
-            window.location = "index.html";
+auth.onAuthStateChanged(user => {
+    const adminBtn = document.getElementById('admin-link');
+    
+    if (!user) {
+        window.location = "index.html";
+    } else {
+        // 🔍 Esto te dirá en la Consola (F12) qué correo detecta el sistema
+        console.log("Usuario detectado:", user.email);
+
+        // 🛡️ Verificación mejorada
+        if (user.email && admins.includes(user.email.toLowerCase())) {
+            if (adminBtn) adminBtn.style.display = 'block';
+            console.log("¡Eres Admin! Botón activado 👑");
         } else {
-            // Si el correo está en la lista, mostrar botón admin
-            if (admins.includes(user.email)) {
-                document.getElementById('admin-link').style.display = 'block';
+            console.log("No eres admin o el correo no coincide.");
+ 
             }
             cargarMensajes();
         }
