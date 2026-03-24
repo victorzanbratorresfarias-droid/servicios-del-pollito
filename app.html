@@ -3,39 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Polli Chat - Oficial</title>
+    <title>Polli Chat - Oficial 🐣</title>
     <style>
         :root { --bg-main: #36393f; --bg-side: #2f3136; --text: #dcddde; --accent: #5865f2; --danger: #ed4245; }
-        body { background: var(--bg-main); color: var(--text); font-family: sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; }
+        body { background: var(--bg-main); color: var(--text); font-family: sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         
         header { 
-            background: var(--bg-side); 
-            padding: 10px 20px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            border-bottom: 1px solid #202225; 
+            background: var(--bg-side); padding: 10px 20px; display: flex; 
+            justify-content: space-between; align-items: center; border-bottom: 1px solid #202225; 
         }
 
         .nav-buttons { display: flex; gap: 10px; }
-        
-        /* Estilos de los botones */
-        button { border: none; border-radius: 4px; padding: 8px 15px; cursor: pointer; font-weight: bold; color: white; }
+        button { border: none; border-radius: 4px; padding: 8px 15px; cursor: pointer; font-weight: bold; color: white; transition: 0.2s; }
         .btn-blue { background: var(--accent); }
-        
-        /* EL BOTÓN MÁGICO: Empieza invisible (display: none) */
+        .btn-blue:hover { background: #4752c4; }
+
+        /* BOTÓN ADMIN SECRETO */
         #admin-link { 
-            background: var(--danger); 
-            display: none; 
-            box-shadow: 0 0 10px rgba(237, 66, 69, 0.3);
+            background: var(--danger); display: none; 
+            box-shadow: 0 0 10px rgba(237, 66, 69, 0.2);
         }
 
-        #chat-wrapper { flex: 1; overflow-y: auto; padding: 20px; }
-        #input-area { padding: 20px; background: var(--bg-side); display: flex; gap: 10px; }
-        input { flex: 1; background: #40444b; border: none; padding: 12px; color: white; border-radius: 5px; outline: none; }
-        
-        .msg-box { margin-bottom: 15px; }
-        .u-name { font-weight: bold; color: #fff; display: block; }
+        #chat-wrapper { flex: 1; overflow-y: auto; padding: 20px; scroll-behavior: smooth; }
+        #chat { display: flex; flex-direction: column; }
+
+        #input-area { padding: 20px; background: var(--bg-side); display: flex; gap: 10px; align-items: center; }
+        input { 
+            flex: 1; background: #40444b; border: none; padding: 12px; 
+            color: white; border-radius: 5px; outline: none; font-size: 1rem;
+        }
+
+        /* DISEÑO DE MENSAJES ESTILO DISCORD */
+        .msg-container { display: flex; gap: 12px; margin-bottom: 18px; align-items: flex-start; }
+        .user-avatar { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid #202225; }
+        .msg-info { display: flex; flex-direction: column; }
+        .u-name { color: #5865f2; font-weight: bold; font-size: 0.9rem; margin-bottom: 2px; }
+        .u-text { color: #dcddde; font-size: 1rem; line-height: 1.4; word-break: break-word; }
     </style>
 </head>
 <body>
@@ -44,18 +47,19 @@
     <h1># polli-chat</h1>
     <div class="nav-buttons">
         <button id="admin-link" onclick="window.location='admin.html'">👑 PANEL ADMIN</button>
-        
         <button class="btn-blue" onclick="window.location='foro.html'">📌 Foro</button>
         <button style="background:#4f545c" onclick="auth.signOut()">Salir</button>
     </div>
 </header>
 
 <div id="chat-wrapper">
-    <div id="chat"></div>
+    <div id="chat">
+        <p style="text-align:center; color:gray; margin-top:20px;">Cargando nido...</p>
+    </div>
 </div>
 
 <div id="input-area">
-    <input id="msg" placeholder="Escribe algo..." onkeypress="if(event.key==='Enter') send()">
+    <input id="msg" placeholder="Escribe un mensaje aquí..." onkeypress="if(event.key==='Enter') send()">
     <button class="btn-blue" onclick="send()">ENVIAR</button>
 </div>
 
@@ -64,19 +68,17 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
 <script>
-const firebaseConfig = {
+    const firebaseConfig = {
         apiKey: "AIzaSyCVQyiAqSFu00dxVxBv3UVv6qbPx_pPlC4",
         authDomain: "serviciosdelpollito-d7c13.firebaseapp.com",
         projectId: "serviciosdelpollito-d7c13"
     };
-    
-    // Inicializar Firebase solo si no está inicializado
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
+
+    if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
     const auth = firebase.auth();
     const db = firebase.firestore();
 
+    // 👑 TUS DOS ADMINS
     const admins = [
         "victorzanbratorresfarias@gmail.com",
         "tahielgz17@gmail.com"
@@ -88,7 +90,8 @@ const firebaseConfig = {
             window.location = "index.html";
         } else {
             const emailActual = user.email.toLowerCase().trim();
-            console.log("Sesión iniciada como:", emailActual);
+            console.log("Conectado como:", emailActual);
+            
             if (admins.includes(emailActual)) {
                 adminBtn.style.display = 'block';
             }
@@ -96,18 +99,16 @@ const firebaseConfig = {
         }
     });
 
-    // --- FUNCIÓN PARA ENVIAR MENSAJES (FALTABA ESTO) ---
+    // --- FUNCIÓN ENVIAR ---
     function send() {
         const input = document.getElementById("msg");
         const texto = input.value.trim();
-        
-        if (!texto) return; // No enviar si está vacío
+        if (!texto) return;
 
         const user = auth.currentUser;
 
-        // Buscamos los datos del usuario (nombre y foto) en su perfil de Firebase
         db.collection("users").doc(user.uid).get().then(doc => {
-            let nombre = user.displayName || "Pollito Anónimo";
+            let nombre = user.displayName || "Pollito Nuevo";
             let foto = user.photoURL || "";
 
             if (doc.exists) {
@@ -119,17 +120,17 @@ const firebaseConfig = {
                 texto: texto,
                 nombre: nombre,
                 foto: foto,
-                fecha: Date.now() // Importante para el orderBy
-            }).then(() => {
-                input.value = ""; // Limpiar input tras enviar
-            });
-        }).catch(err => console.error("Error al enviar:", err));
+                fecha: Date.now()
+            }).then(() => { input.value = ""; });
+        });
     }
 
+    // --- FUNCIÓN CARGAR ---
     function cargarMensajes() {
         const chatDiv = document.getElementById("chat");
         const wrap = document.getElementById("chat-wrapper");
 
+        // Error amigable si tarda más de 5 segundos
         const timeoutError = setTimeout(() => {
             if (chatDiv.innerHTML === "" || chatDiv.innerHTML.includes("Cargando")) {
                 chatDiv.innerHTML = `
@@ -137,6 +138,7 @@ const firebaseConfig = {
                         <img src="https://media.giphy.com/media/h4OGa0npayrS2W7RnI/giphy.gif" width="120">
                         <h3 style="color:white;">¡Algo ha ocurrido! 🐣</h3>
                         <p style="color:gray;">No pudimos conectar con el nido. Revisa tu internet.</p>
+                        <button onclick="location.reload()" style="background:var(--accent); color:white; border:none; padding:8px 15px; border-radius:4px; cursor:pointer;">REINTENTAR</button>
                     </div>`;
             }
         }, 5000);
@@ -147,14 +149,15 @@ const firebaseConfig = {
             
             snap.forEach(doc => {
                 const m = doc.data();
-                const fotoPerfil = m.foto ? m.foto : "https://cdn-icons-png.flaticon.com/512/3996/3996996.png";
+                // 🐣 TU POLLITO GRIS DE IMGUR COMO AVATAR POR DEFECTO
+                const fotoPerfil = m.foto ? m.foto : "https://i.imgur.com/GypIgex.png";
                 
                 chatDiv.innerHTML += `
-                    <div style="display:flex; gap:12px; margin-bottom:18px; align-items: flex-start;">
-                        <img src="${fotoPerfil}" style="width:45px; height:45px; border-radius:50%; object-fit:cover; border: 2px solid #202225;">
-                        <div>
-                            <span style="color:#5865f2; font-weight:bold; font-size:0.9rem;">${m.nombre}</span>
-                            <div style="color:#dcddde; font-size:1rem; margin-top:2px; line-height:1.4;">${m.texto}</div>
+                    <div class="msg-container">
+                        <img src="${fotoPerfil}" class="user-avatar">
+                        <div class="msg-info">
+                            <span class="u-name">${m.nombre}</span>
+                            <div class="u-text">${m.texto}</div>
                         </div>
                     </div>`;
             });
