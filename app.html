@@ -64,16 +64,19 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
 <script>
-    const firebaseConfig = {
+const firebaseConfig = {
         apiKey: "AIzaSyCVQyiAqSFu00dxVxBv3UVv6qbPx_pPlC4",
         authDomain: "serviciosdelpollito-d7c13.firebaseapp.com",
         projectId: "serviciosdelpollito-d7c13"
     };
-    firebase.initializeApp(firebaseConfig);
+    
+    // Inicializar Firebase solo si no está inicializado
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // 👑 LISTA DE ADMINS (Pon los dos correos aquí)
     const admins = [
         "victorzanbratorresfarias@gmail.com",
         "tahielgz17@gmail.com"
@@ -81,62 +84,83 @@
 
     auth.onAuthStateChanged(user => {
         const adminBtn = document.getElementById('admin-link');
-        
         if (!user) {
             window.location = "index.html";
         } else {
-            // Limpiamos el correo para que no haya errores de espacios o mayúsculas
             const emailActual = user.email.toLowerCase().trim();
-            
             console.log("Sesión iniciada como:", emailActual);
-
-            // Si el correo está en la lista, el botón aparece mágicamente
             if (admins.includes(emailActual)) {
                 adminBtn.style.display = 'block';
-                console.log("¡Eres Admin! Panel activado.");
             }
-            
             cargarMensajes();
         }
     });
 
-  function cargarMensajes() {
-    const chatDiv = document.getElementById("chat");
-    const wrap = document.getElementById("chat-wrapper");
-
-    // 🕒 Error amigable si tarda más de 5 segundos
-    const timeoutError = setTimeout(() => {
-        if (chatDiv.innerHTML === "" || chatDiv.innerHTML.includes("Cargando")) {
-            chatDiv.innerHTML = `
-                <div style="text-align:center; padding:50px;">
-                    <img src="https://media.giphy.com/media/h4OGa0npayrS2W7RnI/giphy.gif" width="120">
-                    <h3 style="color:white;">¡Algo ha ocurrido! 🐣</h3>
-                    <p style="color:gray;">No pudimos conectar con el nido. Revisa tu internet.</p>
-                </div>`;
-        }
-    }, 5000);
-
-    db.collection("messages").orderBy("fecha", "asc").onSnapshot(snap => {
-        clearTimeout(timeoutError); // Cancelar error si cargó bien
-        chatDiv.innerHTML = "";
+    // --- FUNCIÓN PARA ENVIAR MENSAJES (FALTABA ESTO) ---
+    function send() {
+        const input = document.getElementById("msg");
+        const texto = input.value.trim();
         
-        snap.forEach(doc => {
-            const m = doc.data();
-            // 🛡️ Si no tiene foto, usamos una por defecto (un pollito o gris)
-            const fotoPerfil = m.foto ? m.foto : "https://cdn-icons-png.flaticon.com/512/3996/3996996.png";
+        if (!texto) return; // No enviar si está vacío
+
+        const user = auth.currentUser;
+
+        // Buscamos los datos del usuario (nombre y foto) en su perfil de Firebase
+        db.collection("users").doc(user.uid).get().then(doc => {
+            let nombre = user.displayName || "Pollito Anónimo";
+            let foto = user.photoURL || "";
+
+            if (doc.exists) {
+                nombre = doc.data().nombre || nombre;
+                foto = doc.data().foto || foto;
+            }
+
+            db.collection("messages").add({
+                texto: texto,
+                nombre: nombre,
+                foto: foto,
+                fecha: Date.now() // Importante para el orderBy
+            }).then(() => {
+                input.value = ""; // Limpiar input tras enviar
+            });
+        }).catch(err => console.error("Error al enviar:", err));
+    }
+
+    function cargarMensajes() {
+        const chatDiv = document.getElementById("chat");
+        const wrap = document.getElementById("chat-wrapper");
+
+        const timeoutError = setTimeout(() => {
+            if (chatDiv.innerHTML === "" || chatDiv.innerHTML.includes("Cargando")) {
+                chatDiv.innerHTML = `
+                    <div style="text-align:center; padding:50px;">
+                        <img src="https://media.giphy.com/media/h4OGa0npayrS2W7RnI/giphy.gif" width="120">
+                        <h3 style="color:white;">¡Algo ha ocurrido! 🐣</h3>
+                        <p style="color:gray;">No pudimos conectar con el nido. Revisa tu internet.</p>
+                    </div>`;
+            }
+        }, 5000);
+
+        db.collection("messages").orderBy("fecha", "asc").onSnapshot(snap => {
+            clearTimeout(timeoutError);
+            chatDiv.innerHTML = "";
             
-            chatDiv.innerHTML += `
-                <div style="display:flex; gap:12px; margin-bottom:18px; align-items: flex-start;">
-                    <img src="${fotoPerfil}" style="width:45px; height:45px; border-radius:50%; object-fit:cover; border: 2px solid #202225;">
-                    <div>
-                        <span style="color:#5865f2; font-weight:bold; font-size:0.9rem;">${m.nombre}</span>
-                        <div style="color:#dcddde; font-size:1rem; margin-top:2px; line-height:1.4;">${m.texto}</div>
-                    </div>
-                </div>`;
+            snap.forEach(doc => {
+                const m = doc.data();
+                const fotoPerfil = m.foto ? m.foto : "https://cdn-icons-png.flaticon.com/512/3996/3996996.png";
+                
+                chatDiv.innerHTML += `
+                    <div style="display:flex; gap:12px; margin-bottom:18px; align-items: flex-start;">
+                        <img src="${fotoPerfil}" style="width:45px; height:45px; border-radius:50%; object-fit:cover; border: 2px solid #202225;">
+                        <div>
+                            <span style="color:#5865f2; font-weight:bold; font-size:0.9rem;">${m.nombre}</span>
+                            <div style="color:#dcddde; font-size:1rem; margin-top:2px; line-height:1.4;">${m.texto}</div>
+                        </div>
+                    </div>`;
+            });
+            wrap.scrollTop = wrap.scrollHeight;
         });
-        wrap.scrollTop = wrap.scrollHeight; // Auto-scroll al final
-    });
-}
+    }
 </script>
 </body>
 </html>
